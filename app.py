@@ -181,20 +181,62 @@ def calculate_overtime_balance(emp_id):
     conn.close()
     return res if res else 0.0
 
-# Sidebar Login & Navigation
+# -----------------------------------------------------------------------------
+# LOGIN & SITZUNGS-STEUERUNG (SESSION STATE)
+# -----------------------------------------------------------------------------
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.user_id = None
+
 st.sidebar.title("🦷 Praxis Urlaubsplaner 2027")
 
 employees_df = get_employees()
-employee_names = employees_df['name'].tolist()
 
-selected_user_name = st.sidebar.selectbox("👤 Benutzer auswählen (Login)", employee_names)
-current_user = employees_df[employees_df['name'] == selected_user_name].iloc[0]
+# Fall 1: Benutzer ist noch NICHT angemeldet
+if not st.session_state.authenticated:
+    st.sidebar.subheader("🔒 Bitte anmelden")
+    
+    selected_user_name = st.sidebar.selectbox("👤 Benutzer auswählen", employees_df['name'].tolist())
+    selected_user = employees_df[employees_df['name'] == selected_user_name].iloc[0]
+    
+    # Passwort / PIN Eingabefeld (verdeckt durch type="password")
+    entered_pin = st.sidebar.text_input("🔑 PIN / Passwort", type="password")
+    
+    if st.sidebar.button("Anmelden"):
+        if entered_pin == str(selected_user['pin']):
+            st.session_state.authenticated = True
+            st.session_state.user_id = selected_user['id']
+            st.sidebar.success("✅ Erfolgreich angemeldet!")
+            st.rerun()
+        else:
+            st.sidebar.error("❌ Falsches Passwort / PIN!")
+            
+    # Stoppt die App-Ausführung hier, sodass keine Daten ohne Login sichtbar sind
+    st.stop()
 
+# Fall 2: Benutzer IST erfolgreich angemeldet
+current_user = employees_df[employees_df['id'] == st.session_state.user_id].iloc[0]
 is_admin = current_user['is_admin'] == 1
 user_role = current_user['role']
 
+# Benutzer-Info und Logout-Button in der Sidebar
+st.sidebar.write(f"Angemeldet als: **{current_user['name']}**")
 st.sidebar.info(f"**Rolle:** {user_role}\n\n**Rechte:** {'🔑 Admin / Leitung' if is_admin else '👤 Mitarbeiter'}")
 
+if st.sidebar.button("🚪 Abmelden"):
+    st.session_state.authenticated = False
+    st.session_state.user_id = None
+    st.rerun()
+
+# Navigation anzeigen
+menu = ["📅 Masterkalender & Raumplanung", "📝 Meine Anträge & Urlaub", "⏳ Überstundenkonto (+/-)", "⚙️ Verwaltung & Genehmigung"]
+if not is_admin:
+    menu = ["📅 Masterkalender & Raumplanung", "📝 Meine Anträge & Urlaub", "⏳ Überstundenkonto (+/-)"]
+
+choice = st.sidebar.radio("Navigation", menu)
+
+st.sidebar.markdown("---")
+st.sidebar.caption("Zahnarztpraxis mit 4 Behandlungszimmern\n(2x Zahnbehandlung, 2x Prophylaxe)")
 menu = ["📅 Masterkalender & Raumplanung", "📝 Meine Anträge & Urlaub", "⏳ Überstundenkonto (+/-)", "⚙️ Verwaltung & Genehmigung"]
 if not is_admin:
     menu = ["📅 Masterkalender & Raumplanung", "📝 Meine Anträge & Urlaub", "⏳ Überstundenkonto (+/-)"]
