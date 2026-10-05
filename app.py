@@ -204,6 +204,61 @@ choice = st.sidebar.radio("Navigation", menu)
 st.sidebar.markdown("---")
 st.sidebar.caption("Zahnarztpraxis mit 4 Behandlungszimmern\n(2x Zahnbehandlung, 2x Prophylaxe)")
 
+# Definition der detaillierten Öffnungszeiten und Tagesabläufe
+PRAXIS_OEFFNUNGSZEITEN = {
+    0: {  # Montag
+        "tag": "Montag",
+        "zeiten": "08:00 – 12:30 Uhr & 14:00 – 18:00 Uhr",
+        "pause": "12:30 – 14:00 Uhr",
+        "ablauf": [
+            "08:00 – 12:30 Uhr: Regulärer Praxisbetrieb (Behandlung & Prophylaxe)",
+            "12:30 – 14:00 Uhr: Mittagspause",
+            "14:00 – 18:00 Uhr: Regulärer Praxisbetrieb (Behandlung & Prophylaxe)"
+        ]
+    },
+    1: {  # Dienstag
+        "tag": "Dienstag",
+        "zeiten": "08:00 – 12:30 Uhr & 14:00 – 19:00 Uhr",
+        "pause": "12:30 – 14:00 Uhr",
+        "ablauf": [
+            "08:00 – 12:30 Uhr: Regulärer Praxisbetrieb",
+            "12:30 – 14:00 Uhr: Mittagspause",
+            "14:00 – 16:00 Uhr: Voller Betrieb (Zahnarzt 1 & 2 im Dienst)",
+            "16:00 – 19:00 Uhr: Zahnarzt 2 Feierabend | Prophylaxe läuft auf 3 Zimmern weiter"
+        ]
+    },
+    2: {  # Mittwoch
+        "tag": "Mittwoch",
+        "zeiten": "08:00 – 18:00 Uhr (Schicht-/Sonderbetrieb)",
+        "pause": "Keine reguläre Pause (1 Zimmer durchgehend aktiv)",
+        "ablauf": [
+            "08:00 – 12:00 Uhr: Regulärer Vormittagsbetrieb",
+            "12:00 – 13:30 Uhr: Mittagspause (Nur 1 Prophylaxezimmer aktiv)",
+            "13:30 – 15:00 Uhr: Zahnarzt 2 + 3 Prophylaxezimmer",
+            "15:00 – 16:00 Uhr: Zahnarzt 2 + 2 Prophylaxezimmer (mit PZR) + 1 Prophylaxezimmer (ohne PZR: nur IP / Zst)",
+            "16:00 – 18:00 Uhr: Zahnarzt 2 + 2 Prophylaxezimmer"
+        ]
+    },
+    3: {  # Donnerstag
+        "tag": "Donnerstag",
+        "zeiten": "08:00 – 12:30 Uhr & 14:00 – 18:00 Uhr",
+        "pause": "12:30 – 14:00 Uhr",
+        "ablauf": [
+            "08:00 – 12:30 Uhr: Regulärer Praxisbetrieb (Behandlung & Prophylaxe)",
+            "12:30 – 14:00 Uhr: Mittagspause",
+            "14:00 – 18:00 Uhr: Regulärer Praxisbetrieb (Behandlung & Prophylaxe)"
+        ]
+    },
+    4: {  # Freitag
+        "tag": "Freitag",
+        "zeiten": "08:00 – 13:00 Uhr (durchgehend)",
+        "pause": "Keine (Durchgehender Vormittag)",
+        "ablauf": [
+            "08:00 – 13:00 Uhr: Regulärer Vormittagsbetrieb"
+        ]
+    }
+}
+
 # TAB 1: MASTERKALENDER & RAUMPLANUNG
 if choice == "📅 Masterkalender & Raumplanung":
     st.header("📅 Masterkalender 2027 & Raumbelegungs-Analyse")
@@ -247,6 +302,18 @@ if choice == "📅 Masterkalender & Raumplanung":
             st.info(f"🏫 **Schulferien BW:** {ferien_name}")
 
     with insp_col2:
+
+        weekday_idx = inspect_date.weekday()
+
+if not is_weekend and not feiertag_name and weekday_idx in PRAXIS_OEFFNUNGSZEITEN:
+    tages_info = PRAXIS_OEFFNUNGSZEITEN[weekday_idx]
+    
+    st.info(f"🕒 **Praxisöffnungszeit ({tages_info['tag']}):** {tages_info['zeiten']} | **Mittagspause:** {tages_info['pause']}")
+    
+    with st.expander("⏱️ Genauen Tagesablauf & Zimmer-Schichtplan anzeigen"):
+        for schritt in tages_info["ablauf"]:
+            st.write(f"- {schritt}")
+        
         absent_emp_ids = set()
         absent_details = {}
         
