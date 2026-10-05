@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for styling
+# Custom CSS
 st.markdown("""
 <style>
     .stMetric {
@@ -21,22 +21,10 @@ st.markdown("""
         border-radius: 8px;
         border-left: 4px solid #0284c7;
     }
-    .status-approved {
-        color: #15803d;
-        font-weight: bold;
-    }
-    .status-pending {
-        color: #b45309;
-        font-weight: bold;
-    }
-    .status-rejected {
-        color: #b91c1c;
-        font-weight: bold;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# Database Setup & Initialization
+# Datenbank & Initialisierung
 DB_FILE = "praxis_urlaub.db"
 
 def get_db_connection():
@@ -47,8 +35,6 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
-    
-    # Employees table
     c.execute("""
         CREATE TABLE IF NOT EXISTS employees (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,8 +46,6 @@ def init_db():
             pin TEXT DEFAULT '1234'
         )
     """)
-    
-    # Absence Requests table
     c.execute("""
         CREATE TABLE IF NOT EXISTS absence_requests (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,8 +61,6 @@ def init_db():
             FOREIGN KEY (employee_id) REFERENCES employees (id)
         )
     """)
-    
-    # Overtime Journal table
     c.execute("""
         CREATE TABLE IF NOT EXISTS overtime_journal (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,7 +73,7 @@ def init_db():
         )
     """)
     
-    # Seed default employees if empty
+    # Standard-Personalstamm eintragen (falls leer)
     c.execute("SELECT COUNT(*) FROM employees")
     if c.fetchone()[0] == 0:
         default_staff = [
@@ -116,16 +98,3 @@ def init_db():
     conn.close()
 
 init_db()
-
-# Feiertage Baden-Württemberg 2027
-FEIERTAG_BW_2027 = {
-    "2027-01-01": "Neujahr",
-    "2027-01-06": "Heilige Drei Könige",
-    "2027-03-26": "Karfreitag",
-    "2027-03-29": "Ostermontag",
-    "2027-05-01": "Tag der Arbeit",
-    "2027-05-06": "Christi Himmelfahrt",
-    "2027-05-17": "Pfingstmontag",
-    "2027-05-27": "Fronleichnam",
-    "2027-10-03": "Tag der Deutschen Einheit",
-    "2027-11-01":
